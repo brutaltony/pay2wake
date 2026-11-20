@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAY2WAKE | Alarm Clock</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #080b12;
+    color: white;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    padding: 25px 18px;
+}
+
+.container {
+    max-width: 430px;
+    margin: auto;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin-bottom: 35px;
+}
+
+.logo span {
+    color: #ff4242;
+}
+
+.status {
+    color: #00e59b;
+    font-size: 12px;
+    margin-bottom: 15px;
+}
+
+.clock {
+    font-size: 58px;
+    font-weight: bold;
+    text-align: center;
+    margin: 35px 0 10px;
+}
+
+.date {
+    text-align: center;
+    color: #9299a9;
+    margin-bottom: 40px;
+}
+
+.card {
+    background: #131927;
+    padding: 25px;
+    border-radius: 18px;
+    border: 1px solid #263044;
+}
+
+h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+input {
+    width: 100%;
+    padding: 16px;
+    background: #080e19;
+    color: white;
+    border: 1px solid #35415a;
+    border-radius: 10px;
+    font-size: 22px;
+    margin-bottom: 18px;
+}
+
+button {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 10px;
+    background: #ff4242;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:active {
+    transform: scale(.97);
+}
+
+.cancel {
+    background: #263044;
+    margin-top: 12px;
+}
+
+.alarm-info {
+    margin-top: 25px;
+    padding: 20px;
+    background: #131927;
+    border-radius: 15px;
+    text-align: center;
+    color: #b6c0d2;
+}
+
+#alarmScreen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #100709;
+    z-index: 10;
+    text-align: center;
+    padding: 35px 20px;
+    overflow-y: auto;
+}
+
+.warning {
+    color: #ff4242;
+    font-size: 14px;
+    letter-spacing: 3px;
+    margin-top: 60px;
+}
+
+.amount {
+    font-size: 55px;
+    font-weight: 900;
+    margin: 25px 0;
+    color: #ff4242;
+}
+
+.payment {
+    background: #ff4242;
+    margin-top: 30px;
+}
+
+.free {
+    background: #263044;
+    margin-top: 15px;
+}
+
+.small {
+    color: #9299a9;
+    font-size: 12px;
+    margin-top: 25px;
+}
+
+#message {
+    color: #00e59b;
+    margin-top: 20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="logo">PAY<span>2</span>WAKE</div>
+
+    <div class="status">● SYSTEM ONLINE</div>
+
+    <div class="clock" id="clock">00:00:00</div>
+
+    <div class="date" id="date"></div>
+
+    <div class="card">
+
+        <h2>⏰ Set Your Alarm</h2>
+
+        <input type="time" id="alarmTime">
+
+        <button onclick="setAlarm()">SET ALARM</button>
+
+        <button class="cancel" onclick="cancelAlarm()">
+            CANCEL ALARM
+        </button>
+
+    </div>
+
+    <div class="alarm-info" id="alarmInfo">
+        No active alarm
+    </div>
+
+</div>
+
+
+<div id="alarmScreen">
+
+    <div class="warning">🚨 WAKE UP SYSTEM 🚨</div>
+
+    <h1 style="margin-top:30px;font-size:32px;">
+        ALARM LOCKED!
+    </h1>
+
+    <p style="margin-top:20px;color:#aaa;">
+        Your wake-up subscription has expired.
+    </p>
+
+    <div class="amount">$5.00</div>
+
+    <p>Outstanding wake-up balance</p>
+
+    <button class="payment" onclick="fakePayment()">
+        PAY NOW — $5.00
+    </button>
+
+    <p id="message"></p>
+
+    <button class="free" onclick="stopAlarm()">
+        😂 JUST KIDDING — STOP ALARM
+    </button>
+
+    <div class="small">
+        PAY2WAKE PRANK SIMULATION<br>
+        NO REAL PAYMENT REQUIRED
+    </div>
+
+</div>
+
+
+<script>
+
+let alarm = null;
+let alarmTriggered = false;
+let audioContext = null;
+let soundTimer = null;
+
+function updateClock() {
+
+    const now = new Date();
+
+    document.getElementById("clock").textContent =
+        now.toLocaleTimeString();
+
+    document.getElementById("date").textContent =
+        now.toDateString();
+
+    if (alarm && !alarmTriggered) {
+
+        const target = new Date(alarm);
+
+        if (now >= target) {
+            ringAlarm();
+        }
+    }
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
+
+function setAlarm() {
+
+    const value = document.getElementById("alarmTime").value;
+
+    if (!value) {
+        alert("Please select an alarm time!");
+        return;
+    }
+
+    const now = new Date();
+    const [hours, minutes] = value.split(":");
+
+    const target = new Date();
+
+    target.setHours(Number(hours));
+    target.setMinutes(Number(minutes));
+    target.setSeconds(0);
+    target.setMilliseconds(0);
+
+    if (target <= now) {
+        target.setDate(target.getDate() + 1);
+    }
+
+    alarm = target;
+    alarmTriggered = false;
+
+    document.getElementById("alarmInfo").textContent =
+        "⏰ Alarm set for " + value;
+
+    // Prepare audio after user interaction
+    try {
+        audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
+
+        audioContext.resume();
+
+    } catch(e) {}
+
+}
+
+
+function ringAlarm() {
+
+    alarmTriggered = true;
+
+    document.getElementById("alarmScreen").style.display = "block";
+
+    playSound();
+
+    soundTimer = setInterval(playSound, 1500);
+
+}
+
+
+function playSound() {
+
+    if (!audioContext) return;
+
+    if (audioContext.state === "suspended") {
+        audioContext.resume();
+    }
+
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.frequency.value = 880;
+    oscillator.type = "square";
+
+    gain.gain.value = 0.2;
+
+    oscillator.start();
+
+    oscillator.stop(audioContext.currentTime + 0.5);
+
+}
+
+
+function stopAlarm() {
+
+    clearInterval(soundTimer);
+
+    document.getElementById("alarmScreen").style.display = "none";
+
+    document.getElementById("alarmInfo").textContent =
+        "Alarm dismissed. Have a nice day! 😂";
+
+    alarm = null;
+    alarmTriggered = false;
+
+}
+
+
+function cancelAlarm() {
+
+    clearInterval(soundTimer);
+
+    alarm = null;
+    alarmTriggered = false;
+
+    document.getElementById("alarmInfo").textContent =
+        "No active alarm";
+
+}
+
+
+function fakePayment() {
+
+    document.getElementById("message").textContent =
+        "😂 PAYMENT FAILED! EVEN THE BANK IS LAUGHING.";
+
+}
+
+</script>
+
+</body>
+</html>
